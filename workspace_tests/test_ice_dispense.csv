@@ -1,0 +1,5 @@
+test_num,timestamp,zone,x,y,z,status,duration_sec,note
+1,2025-12-31 20:04:23,ice_dispense,-103.0,-60.0,-110.0,OK,2.526,"Auto: OK, User: OK | Move completed"
+2,2025-12-31 20:04:30,ice_dispense,-103.0,-60.0,-100.0,OK,2.908,"Auto: OK, User: OK | Move completed"
+3,2025-12-31 20:04:34,ice_dispense,-103.0,-60.0,-90.0,OK,2.905,"Auto: OK, User: OK | Move completed"
+4,2025-12-31 20:04:38,ice_dispense,-103.0,-60.0,-80.0,OK,2.929,"Auto: OK, User: OK | Move completed"

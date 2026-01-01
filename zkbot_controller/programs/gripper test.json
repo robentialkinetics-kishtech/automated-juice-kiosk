@@ -1,0 +1,32 @@
+{
+  "name": "unnamed",
+  "steps": [
+    {
+      "cmd": "G00",
+      "x": null,
+      "y": null,
+      "z": null,
+      "f": 20.0,
+      "delay": 0.5,
+      "do0": 20.0
+    },
+    {
+      "cmd": "G00",
+      "x": null,
+      "y": null,
+      "z": null,
+      "f": 20.0,
+      "delay": 0.5,
+      "do0": 0.0
+    },
+    {
+      "cmd": "G00",
+      "x": null,
+      "y": null,
+      "z": null,
+      "f": 20.0,
+      "delay": 0.5,
+      "do0": -90.0
+    }
+  ]
+}
