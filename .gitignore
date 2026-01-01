@@ -1,0 +1,27 @@
+# Virtual environments
+venv/
+zkbot_controller/venv/
+.env
+
+# Byte-compiled / caches
+__pycache__/
+*.py[cod]
+
+# IDEs and editors
+.vscode/
+.idea/
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Test outputs
+workspace_tests/
+
+# Python packaging
+*.egg-info/
+.build/
+dist/
+
+# Ignore images built or large files (optional)
+# images/
