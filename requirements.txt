@@ -1,2 +1,4 @@
 pyserial
 Pillow
+flake8
+pytest

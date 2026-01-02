@@ -22,3 +22,9 @@ jobs:
       - name: Syntax check (py_compile)
         run: |
           python -m py_compile zkbot_controller/*.py
+      - name: Lint (flake8)
+        run: |
+          flake8 zkbot_controller || true
+      - name: Run tests (pytest)
+        run: |
+          pytest -q
