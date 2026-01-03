@@ -23,6 +23,9 @@ import sqlite3
 from contextlib import contextmanager
 from datetime import datetime
 
+# Debug mode - set to True if robot not connected
+DEBUG_MODE = False  # Change to True to simulate robot movements
+
 class KioskDB:
     def __init__(self, db_path="data/kiosk.db"):
         Path(db_path).parent.mkdir(parents=True, exist_ok=True)
@@ -103,28 +106,16 @@ DEV_PASSWORD = "0000"       # TODO: move to config file
 # If your robot programs use different names, set runner_key accordingly.
 DRINK_CATALOG = {
     "mango": {
-        "label": "badham juice",
+        "label": "Mango Juice",
         "price": 80,
         "image": IMAGES_DIR / "badham.jpeg",
         "runner_key": "mango",
     },
     "orange": {
-        "label": "grape Juice",
+        "label": "Orange Juice",
         "price": 70,
         "image": IMAGES_DIR / "grape.jpeg",
         "runner_key": "orange",
-    },
-    "grape": {
-        "label": "lemon Juice",
-        "price": 75,
-        "image": IMAGES_DIR / "lemon.jpeg",
-        "runner_key": "grape",
-    },
-    "apple": {
-        "label": "rose milk",
-        "price": 85,
-        "image": IMAGES_DIR / "rose.jpeg",
-        "runner_key": "apple",
     },
 }
 
@@ -394,22 +385,22 @@ class CustomerPage(tk.Frame):
         row = col = 0
         for key, info in DRINK_CATALOG.items():
             card = tk.Frame(grid, bg="white", highlightbackground="#E5E7EB", highlightthickness=1)
-            card.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
+            card.grid(row=row, column=col, padx=8, pady=8, sticky="nsew")
 
-            img = load_image(info["image"], size=(240, 240))
+            img = load_image(info["image"], size=(160, 160))
             if img is not None:
                 self.images[key] = img
-                tk.Label(card, image=img, bg="white").pack(pady=(12, 6))
+                tk.Label(card, image=img, bg="white").pack(pady=(10, 4))
             else:
-                tk.Label(card, text=info["label"], font=("Segoe UI", 14, "bold"), bg="white").pack(pady=30)
+                tk.Label(card, text=info["label"], font=("Segoe UI", 12, "bold"), bg="white").pack(pady=20)
 
-            tk.Label(card, text=info["label"], font=("Segoe UI", 14, "bold"), bg="white", fg="#111827").pack()
-            tk.Label(card, text=f"₹{info['price']}", font=("Segoe UI", 14, "bold"), bg="white", fg="#16A34A").pack(pady=(2, 10))
+            tk.Label(card, text=info["label"], font=("Segoe UI", 11, "bold"), bg="white", fg="#111827").pack()
+            tk.Label(card, text=f"₹{info['price']}", font=("Segoe UI", 11, "bold"), bg="white", fg="#16A34A").pack(pady=(1, 8))
 
             tk.Button(card, text="Add",
                       command=lambda k=key: self.add_to_order(k),
                       bg="#2563EB", fg="white", relief="flat",
-                      font=("Segoe UI", 11, "bold"), padx=10, pady=8).pack(padx=12, pady=(0, 12), fill="x")
+                      font=("Segoe UI", 10, "bold"), padx=8, pady=6).pack(padx=10, pady=(0, 10), fill="x")
 
             col += 1
             if col >= 2:
@@ -543,19 +534,37 @@ class CustomerPage(tk.Frame):
                 self._set_status(f"Making #{oid}: {label}")
                 self.db.set_status(oid, "in_progress")
 
-                make_drink(runner_key)  # blocking
-
-                self.db.set_status(oid, "completed")
-                self.active_orders.pop(0)  # <- THIS makes it disappear from display
-                self._set_status(f"Completed #{oid}: {label}")
+                try:
+                    if DEBUG_MODE:
+                        # Simulate robot movement in debug mode
+                        self._set_status(f"[DEBUG] Simulating #{oid}: {label}")
+                        time.sleep(2)
+                    else:
+                        make_drink(runner_key)  # blocking
+                    
+                    self.db.set_status(oid, "completed")
+                    self._set_status(f"✓ Completed #{oid}: {label}")
+                except FileNotFoundError as fnf_error:
+                    error_msg = f"Program file not found: {str(fnf_error)}"
+                    self._set_status(error_msg)
+                    self.db.set_status(oid, "failed", error_msg)
+                    self.after(0, lambda em=error_msg: messagebox.showerror("File Error", em))
+                except Exception as drink_error:
+                    error_msg = f"Robot error: {str(drink_error)}\n\nMake sure:\n1. Robot is powered ON\n2. COM3 port is correct\n3. USB cable is connected"
+                    self._set_status(error_msg)
+                    self.db.set_status(oid, "failed", str(drink_error))
+                    self.after(0, lambda em=error_msg: messagebox.showerror("Drink Error", em))
+                
+                self.active_orders.pop(0)
                 time.sleep(1)
 
         except Exception as e:
+            error_msg = f"Queue error: {str(e)}"
             if self.active_orders:
                 fail = self.active_orders.pop(0)
-                self.db.set_status(fail["id"], "failed", str(e))
-            self._set_status(f"Error: {e}")
-            messagebox.showerror("Error", str(e))
+                self.db.set_status(fail["id"], "failed", error_msg)
+            self._set_status(error_msg)
+            self.after(0, lambda em=error_msg: messagebox.showerror("Error", em))
         finally:
             self.is_running = False
             self.after(0, lambda: self.start_btn.config(state="normal"))
